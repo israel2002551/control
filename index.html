@@ -40,9 +40,9 @@
         .connection-badge.connected { background: rgba(0, 255, 136, 0.1); color: var(--success); border: 1px solid rgba(0, 255, 136, 0.3); }
         .connection-badge.disconnected { background: rgba(255, 51, 102, 0.1); color: var(--danger); border: 1px solid rgba(255, 51, 102, 0.3); }
         label { display: block; margin: 16px 0 8px; font-weight: 600; font-size: 11px; color: var(--text-dim); text-transform: uppercase; }
-        select { width: 100%; padding: 12px 16px; background: rgba(30, 30, 45, 0.8); border: 1px solid var(--border); border-radius: 10px; color: var(--text); }
+        select { width: 100%; padding: 12px 16px; background: rgba(30, 30, 45, 0.8); border: 1px solid var(--border); border-radius: 10px; color: var(--text); outline: none;}
         .drivetrain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 280px; margin: 20px auto; }
-        .joy-btn { background: #2d2d3a; color: var(--text); border: 1px solid var(--border); padding: 18px; border-radius: 12px; font-weight: 700; cursor: pointer; text-align: center; }
+        .joy-btn { background: #2d2d3a; color: var(--text); border: 1px solid var(--border); padding: 18px; border-radius: 12px; font-weight: 700; cursor: pointer; text-align: center; user-select: none; }
         .joy-btn:hover { border-color: var(--primary); }
         .stop-btn { background: var(--danger) !important; }
         .slider-container { background: rgba(30, 30, 45, 0.6); padding: 14px 16px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); }
@@ -62,7 +62,7 @@
     <div class="card header">
         <div>
             <h1>ARMPI PRO MASTER CONTROLLER</h1>
-            <div style="font-size:11px; color:var(--text-dim);">EMQX ROUTING INTERFACE</div>
+            <div style="font-size:11px; color:var(--text-dim);">EMQX CLOUD SYSTEM BRIDGE</div>
         </div>
         <div id="statusBadge" class="connection-badge disconnected">
             <span id="statusText">CONNECTING...</span>
@@ -70,73 +70,86 @@
     </div>
 
     <div class="card">
-        <h2>Autonomous Configuration</h2>
+        <h2>Autonomous Target Specs</h2>
         <label>Target Object</label>
         <select id="targetObject">
-            <option value="sports ball">⚽ Tennis Ball</option>
-            <option value="cup">🥛 Cup</option>
+            <option value="sports ball">⚽ Tennis / Sports Ball</option>
+            <option value="cup">🥛 Cup / Bottle</option>
+            <option value="apple">🍎 Apple / Fruit</option>
+            <option value="box">📦 Box / Container</option>
         </select>
         <label>Target Color</label>
         <select id="targetColor">
             <option value="yellow">Yellow</option>
             <option value="red">Red</option>
+            <option value="blue">Blue</option>
+            <option value="green">Green</option>
         </select>
-        <label>Confidence Limit</label>
+        <label>Confidence Gate</label>
         <div class="slider-container">
             <div class="slider-header"><span>YOLO Barrier</span><span class="slider-val" id="confValText">75%</span></div>
             <input type="range" id="confidenceSlider" min="10" max="99" value="75" oninput="document.getElementById('confValText').innerText=this.value+'%'">
         </div>
-        <label>Mission Selection</label>
+        <label>Mission Routine</label>
         <select id="missionMode">
-            <option value="track">📍 Track Only</option>
-            <option value="grab">🦾 Adaptive Grab</option>
+            <option value="track">📍 Track & Follow Only</option>
+            <option value="grab">🦾 Detect & Adaptive Grab</option>
+            <option value="sort">📦 Industrial Route Sortation</option>
         </select>
-        <button class="deploy-btn" onclick="deployAutonomousConfig()">🚀 Transmit Mission Profile</button>
+        <button class="deploy-btn" onclick="deployAutonomousConfig()">🚀 Sync Autonomous Agent Params</button>
     </div>
 
     <div class="card">
-        <h2>Manual Diagnostics Override</h2>
-        <label>Chassis Motion Control</label>
+        <h2>Manual Override Diagnostics</h2>
+        <label>Chassis Drivetrain Thrust Vector</label>
         <div class="drivetrain-grid">
-            <div></div><div class="joy-btn" onclick="sendDriveCmd(60, 0)">▲</div><div></div>
-            <div class="joy-btn" onclick="sendDriveCmd(0, -60)">◀</div>
+            <div></div><div class="joy-btn" onclick="sendDriveCmd(100, 0)">▲</div><div></div>
+            <div class="joy-btn" onclick="sendDriveCmd(0, -100)">◀</div>
             <div class="joy-btn stop-btn" onclick="sendDriveCmd(0, 0)">■</div>
-            <div class="joy-btn" onclick="sendDriveCmd(0, 60)">▶</div>
-            <div></div><div class="joy-btn" onclick="sendDriveCmd(-60, 0)">▼</div><div></div>
+            <div class="joy-btn" onclick="sendDriveCmd(0, 100)">▶</div>
+            <div></div><div class="joy-btn" onclick="sendDriveCmd(-100, 0)">▼</div><div></div>
         </div>
 
-        <label>Joint Servos</label>
+        <label>6-DoF Joint Manipulator Array</label>
         <div class="slider-container">
-            <div class="slider-header"><span>Base Rotation</span><span class="slider-val" id="vBase">90°</span></div>
+            <div class="slider-header"><span>Base Rotation (Joint 1)</span><span class="slider-val" id="vBase">90°</span></div>
             <input type="range" min="0" max="180" value="90" oninput="moveServo('base', this.value)">
         </div>
         <div class="slider-container">
-            <div class="slider-header"><span>Shoulder Pitch</span><span class="slider-val" id="vShoulder">30°</span></div>
+            <div class="slider-header"><span>Shoulder Pitch (Joint 2)</span><span class="slider-val" id="vShoulder">30°</span></div>
             <input type="range" min="0" max="180" value="30" oninput="moveServo('shoulder', this.value)">
         </div>
         <div class="slider-container">
-            <div class="slider-header"><span>Elbow Pitch</span><span class="slider-val" id="vElbow">110°</span></div>
+            <div class="slider-header"><span>Elbow Pitch (Joint 3)</span><span class="slider-val" id="vElbow">110°</span></div>
             <input type="range" min="0" max="180" value="110" oninput="moveServo('elbow', this.value)">
+        </div>
+        <div class="slider-container">
+            <div class="slider-header"><span>Wrist Tilt (Joint 4)</span><span class="slider-val" id="vWrist">85°</span></div>
+            <input type="range" min="0" max="180" value="85" oninput="moveServo('wrist', this.value)">
+        </div>
+        <div class="slider-container">
+            <div class="slider-header"><span>Claw Gripper (Joint 5)</span><span class="slider-val" id="vClaw">40°</span></div>
+            <input type="range" min="10" max="130" value="40" oninput="moveServo('claw', this.value)">
         </div>
     </div>
 
     <div class="card log-panel">
-        <h2>Live Telemetry Stream</h2>
+        <h2>Telemetry Stream Output</h2>
         <div class="log-entries" id="logEntries"></div>
     </div>
 </div>
 
 <script>
     const TOPIC_PREFIX = "efe_robot_2026/pi/cmd";
-    const uniqueId = "dash_" + Math.random().toString(36).substring(2, 8);
+    const uniqueId = "dash_emqx_" + Math.random().toString(36).substring(2, 8);
     
-    // Connect to EMQX Public Broker using secure WebSockets
+    // Explicit /mqtt resource path handles EMQX unauthenticated security constraints
     const client = new Paho.MQTT.Client("broker.emqx.io", Number(8084), "/mqtt", uniqueId);
 
     client.onConnectionLost = (res) => {
         document.getElementById("statusBadge").className = "connection-badge disconnected";
         document.getElementById("statusText").innerText = "DISCONNECTED";
-        addLog("❌ Broker link down: " + res.errorMessage + ". Reconnecting...");
+        addLog("❌ Link dropped: " + res.errorMessage + ". Retrying background handshake...");
         setTimeout(() => { if(!client.connected) connect(); }, 3000);
     };
 
@@ -144,15 +157,15 @@
         client.connect({
             useSSL: true,
             timeout: 10,
-            keepAliveInterval: 60,
+            keepAliveInterval: 45, // Critical keeping 4G routing paths from timing out
             mqttVersion: 4,
             onSuccess: () => {
                 document.getElementById("statusBadge").className = "connection-badge connected";
                 document.getElementById("statusText").innerText = "LINK ACTIVE";
-                addLog("✅ Securely connected to EMQX Broker.");
+                addLog("✅ Secure tunnel successfully registered on EMQX cluster node.");
             },
             onFailure: (err) => {
-                addLog("❌ Connection failed: " + err.errorMessage);
+                addLog("❌ Handshake refused: " + err.errorMessage);
             }
         });
     }
@@ -163,6 +176,7 @@
         entry.className = 'log-entry';
         entry.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
         container.insertBefore(entry, container.firstChild);
+        while(container.children.length > 30) { container.removeChild(container.lastChild); }
     }
 
     function sendMqtt(topic, payload) {
@@ -175,7 +189,7 @@
     function sendDriveCmd(speed, steer) {
         const payload = { speed: speed, steer: steer, hold: (speed === 0 && steer === 0) };
         sendMqtt(TOPIC_PREFIX + "/move", payload);
-        addLog(`🚗 Transmitted Movement -> Spd: ${speed} | Str: ${steer}`);
+        addLog(`➔ Sent Drive Intent -> Speed: ${speed} | Steer: ${steer}`);
     }
 
     function moveServo(joint, value) {
@@ -193,7 +207,7 @@
             confidence_threshold: parseInt(document.getElementById("confidenceSlider").value) / 100
         };
         sendMqtt("efe_robot_2026/dashboard/config", payload);
-        addLog("🚀 Synchronized target parameters across network cluster.");
+        addLog("🚀 Sent global parameters profile to central routing node.");
     }
 
     connect();
