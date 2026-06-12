@@ -562,35 +562,48 @@
 <script>
     const TOPIC_PREFIX = "efe_robot_2026/pi/cmd";
     
-    // CONNECT MATRIX CRITICAL UPDATE: Inserted explicit resource path "/mqtt"
+    // Generates a robust, unique client ID to prevent collisions on public gateways
+    const uniqueClientId = "armpi_pro_" + Math.random().toString(36).substring(2, 8) + Math.random().toString(36).substring(2, 8);
+    
     const client = new Paho.MQTT.Client(
         "broker.hivemq.com", 
         Number(8884), 
         "/mqtt", 
-        "client_" + Math.random().toString(16).substr(2, 4)
+        uniqueClientId
     );
 
     client.onConnectionLost = (responseObject) => {
         document.getElementById("statusBadge").className = "connection-badge disconnected";
         document.getElementById("statusText").innerText = "DISCONNECTED";
-        addLog("❌ Link broken: " + responseObject.errorMessage + ". Retrying socket initialization...");
+        addLog("❌ Link broken: " + responseObject.errorMessage + ". Attempting automatic reconnection...");
+        
+        // Reconnection handler loop
+        setTimeout(() => {
+            if (!client.connected) {
+                addLog("🔄 Attempting to re-establish secure socket...");
+                connectClient();
+            }
+        }, 3000);
     };
 
-    client.connect({
-        useSSL: true,
-        timeout: 5,
-        mqttVersion: 4, // Forces core v3.1.1 framing compatibility
-        onSuccess: () => {
-            document.getElementById("statusBadge").className = "connection-badge connected";
-            document.getElementById("statusText").innerText = "LINK ACTIVE";
-            addLog("✅ Diagnostic channel securely linked via WSS.");
-        },
-        onFailure: (err) => {
-            document.getElementById("statusBadge").className = "connection-badge disconnected";
-            document.getElementById("statusText").innerText = "FAILED";
-            addLog(`❌ Handshake dropped: ${err.errorMessage} (Error Code: ${err.errorCode})`);
-        }
-    });
+    function connectClient() {
+        client.connect({
+            useSSL: true,
+            timeout: 10,
+            keepAliveInterval: 60, // Heartbeat frame keeping socket alive
+            mqttVersion: 4, 
+            onSuccess: () => {
+                document.getElementById("statusBadge").className = "connection-badge connected";
+                document.getElementById("statusText").innerText = "LINK ACTIVE";
+                addLog("✅ Diagnostic channel securely linked via WSS.");
+            },
+            onFailure: (err) => {
+                document.getElementById("statusBadge").className = "connection-badge disconnected";
+                document.getElementById("statusText").innerText = "FAILED";
+                addLog(`❌ Handshake dropped: ${err.errorMessage} (Error Code: ${err.errorCode})`);
+            }
+        });
+    }
 
     function addLog(msg) {
         const container = document.getElementById('logEntries');
@@ -638,6 +651,9 @@
         sendMqtt("efe_robot_2026/dashboard/config", payload);
         addLog(`🚀 Sent autonomous agent specifications targeting: ${payload.target_color} ${payload.target_object}`);
     }
+
+    // Initialize connection on load
+    connectClient();
 </script>
 </body>
 </html>
